@@ -1,10 +1,10 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
   id: string;
   email: string;
   name: string;
+  isAdmin?: boolean;
 }
 
 interface AuthContextType {
@@ -30,7 +30,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Check for existing session on mount
   useEffect(() => {
     const checkAuthState = () => {
       try {
@@ -51,16 +50,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // In a real app, this would be an API call to your backend
-      // Mock implementation for demo purposes
+      if (email === "1234" && password === "1456") {
+        const adminUser = {
+          id: "admin-1",
+          email: "admin@bellecosmetics.com",
+          name: "Admin",
+          isAdmin: true
+        };
+        setUser(adminUser);
+        localStorage.setItem('user', JSON.stringify(adminUser));
+        return true;
+      }
+      
       if (email && password) {
-        // Simulate backend validation
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Check if user exists in localStorage (for demo only)
         const storedUsers = JSON.parse(localStorage.getItem('users') || '[]');
         const matchedUser = storedUsers.find((u: any) => 
-          u.email === email && u.password === password // In real app, passwords would be hashed
+          u.email === email && u.password === password
         );
         
         if (matchedUser) {
@@ -83,13 +90,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // In a real app, this would be an API call to your backend
-      // Mock implementation for demo purposes
       if (name && email && password) {
-        // Simulate backend processing
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Check if user already exists (for demo only)
         const storedUsers = JSON.parse(localStorage.getItem('users') || '[]');
         const userExists = storedUsers.some((u: any) => u.email === email);
         
@@ -97,19 +100,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return false;
         }
         
-        // Create new user
         const newUser = {
           id: Date.now().toString(),
           name,
           email,
-          password, // In real app, password would be hashed
+          password,
         };
         
-        // Save to localStorage (for demo only)
         storedUsers.push(newUser);
         localStorage.setItem('users', JSON.stringify(storedUsers));
         
-        // Log user in
         const { password: _, ...userWithoutPassword } = newUser;
         setUser(userWithoutPassword);
         localStorage.setItem('user', JSON.stringify(userWithoutPassword));

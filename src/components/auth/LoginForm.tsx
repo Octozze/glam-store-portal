@@ -11,8 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 
 const loginSchema = z.object({
-  email: z.string().email('Adresse email invalide'),
-  password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères')
+  email: z.string().min(1, 'Ce champ est requis'),
+  password: z.string().min(1, 'Ce champ est requis')
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -64,12 +64,12 @@ const LoginForm = () => {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-          Adresse Email
+          Identifiant
         </label>
         <Input
           id="email"
-          type="email"
-          placeholder="votre@email.com"
+          type="text"
+          placeholder="Entrez votre identifiant"
           {...register('email')}
           className={errors.email ? 'border-red-500' : ''}
         />
@@ -111,6 +111,12 @@ const LoginForm = () => {
         <a href="#" className="text-sm text-cosmetic-darkpink hover:underline">
           Mot de passe oublié ?
         </a>
+      </div>
+
+      <div className="text-sm text-gray-600 p-2 bg-gray-50 rounded border border-gray-200">
+        <p><strong>Pour accéder au Dashboard Admin:</strong></p>
+        <p>Identifiant: 1234</p>
+        <p>Mot de passe: 1456</p>
       </div>
 
       <Button 
