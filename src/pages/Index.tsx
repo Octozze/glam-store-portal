@@ -1,13 +1,33 @@
-// Update this page (the content is just a fallback if you fail to update the page)
 
-const Index = () => {
+import React from 'react';
+import Layout from '@/components/Layout';
+import Hero from '@/components/home/Hero';
+import NewArrivals from '@/components/home/NewArrivals';
+import FeaturedProducts from '@/components/home/FeaturedProducts';
+import Testimonials from '@/components/home/Testimonials';
+import { products, testimonials } from '@/data/mockData';
+
+const Index: React.FC = () => {
+  // Filter new arrivals and bestsellers
+  const newArrivalsProducts = products.filter(product => product.isNew).slice(0, 4);
+  const bestSellersProducts = products.filter(product => product.isBestSeller).slice(0, 4);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <Layout>
+      <Hero />
+      
+      <NewArrivals products={newArrivalsProducts} />
+      
+      <FeaturedProducts
+        title="Meilleures Ventes"
+        description="Découvrez nos produits les plus populaires, plébiscités par nos clients."
+        products={bestSellersProducts}
+        linkText="Voir toutes les meilleures ventes"
+        linkTo="/products?category=bestseller"
+      />
+      
+      <Testimonials testimonials={testimonials} />
+    </Layout>
   );
 };
 
