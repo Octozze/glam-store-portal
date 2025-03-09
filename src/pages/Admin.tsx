@@ -2,12 +2,13 @@
 import React, { useState } from 'react';
 import { 
   Package, Users, ShoppingCart, Tag, BarChart, Settings, 
-  ChevronRight, Plus, Search 
+  ChevronRight, Plus, Search, PieChart, DollarSign, TrendingUp,
+  Calendar, Eye, CreditCard, CheckCircle, XCircle, RotateCcw
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Table, 
   TableBody, 
@@ -18,9 +19,17 @@ import {
 } from '@/components/ui/table';
 import { products } from '@/data/mockData';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import SalesChart from '@/components/admin/SalesChart';
+import ConversionChart from '@/components/admin/ConversionChart';
 
 const Admin: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedView, setSelectedView] = useState('overview');
+  const { user } = useAuth();
+  const navigate = useNavigate();
   
   // Filter products based on search term
   const filteredProducts = products.filter(product => 
@@ -29,105 +38,221 @@ const Admin: React.FC = () => {
     product.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Mock data for dashboard
+  const mockOrders = [
+    { id: 1, customer: 'Sophie Martin', date: '2023-10-15', status: 'completed', total: 127.50 },
+    { id: 2, customer: 'Lucas Dubois', date: '2023-10-16', status: 'processing', total: 89.90 },
+    { id: 3, customer: 'Emma Bernard', date: '2023-10-16', status: 'processing', total: 215.30 },
+    { id: 4, customer: 'Thomas Petit', date: '2023-10-14', status: 'refunded', total: 64.75 },
+    { id: 5, customer: 'Camille Leroy', date: '2023-10-13', status: 'completed', total: 158.20 },
+  ];
+
+  const mockBestSellers = [
+    { id: 1, name: 'Sérum Hydratant', sales: 128, revenue: 3840 },
+    { id: 2, name: 'Crème Anti-Âge', sales: 94, revenue: 3290 },
+    { id: 3, name: 'Masque Purifiant', sales: 83, revenue: 1660 },
+    { id: 4, name: 'Huile Démaquillante', sales: 76, revenue: 1520 },
+    { id: 5, name: 'Tonique Apaisant', sales: 65, revenue: 1300 },
+  ];
+
+  // Get order status badge
+  const getOrderStatusBadge = (status: string) => {
+    switch(status) {
+      case 'completed':
+        return <Badge className="bg-green-500">Complétée</Badge>;
+      case 'processing':
+        return <Badge className="bg-blue-500">En cours</Badge>;
+      case 'refunded':
+        return <Badge className="bg-red-500">Remboursée</Badge>;
+      default:
+        return <Badge>En attente</Badge>;
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="font-serif text-3xl md:text-4xl font-bold mb-2">Tableau de Bord Admin</h1>
-        <p className="text-gray-600 mb-8">Gérez vos produits, commandes et clients.</p>
-        
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">Total Produits</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center">
-                <div className="text-2xl font-bold">{products.length}</div>
-                <Package className="h-5 w-5 text-cosmetic-darkpink" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">Commandes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center">
-                <div className="text-2xl font-bold">24</div>
-                <ShoppingCart className="h-5 w-5 text-cosmetic-darkpink" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">Clients</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center">
-                <div className="text-2xl font-bold">156</div>
-                <Users className="h-5 w-5 text-cosmetic-darkpink" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">Revenus</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center">
-                <div className="text-2xl font-bold">4,280€</div>
-                <BarChart className="h-5 w-5 text-cosmetic-darkpink" />
-              </div>
-            </CardContent>
-          </Card>
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+          <div>
+            <h1 className="font-serif text-3xl md:text-4xl font-bold mb-2">Tableau de Bord Admin</h1>
+            <p className="text-gray-600">Bienvenue, {user?.name}. Gérez vos produits, commandes et suivez les performances.</p>
+          </div>
+          <div className="mt-4 md:mt-0 flex gap-2">
+            <Button variant="outline" className="gap-2">
+              <Calendar className="h-4 w-4" /> 
+              Derniers 30 jours
+            </Button>
+            <Button variant="outline" className="gap-2">
+              <RotateCcw className="h-4 w-4" /> 
+              Actualiser
+            </Button>
+          </div>
         </div>
         
-        {/* Admin Menu */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          <div className="md:col-span-1">
-            <Card>
-              <CardContent className="p-0">
-                <div className="divide-y divide-gray-200">
-                  <Button variant="ghost" className="w-full justify-start p-4 rounded-none">
-                    <Package className="mr-2 h-5 w-5 text-cosmetic-darkpink" />
-                    <span>Produits</span>
-                    <ChevronRight className="ml-auto h-5 w-5" />
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start p-4 rounded-none">
-                    <ShoppingCart className="mr-2 h-5 w-5" />
-                    <span>Commandes</span>
-                    <ChevronRight className="ml-auto h-5 w-5" />
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start p-4 rounded-none">
-                    <Users className="mr-2 h-5 w-5" />
-                    <span>Clients</span>
-                    <ChevronRight className="ml-auto h-5 w-5" />
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start p-4 rounded-none">
-                    <Tag className="mr-2 h-5 w-5" />
-                    <span>Promotions</span>
-                    <ChevronRight className="ml-auto h-5 w-5" />
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start p-4 rounded-none">
-                    <BarChart className="mr-2 h-5 w-5" />
-                    <span>Statistiques</span>
-                    <ChevronRight className="ml-auto h-5 w-5" />
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start p-4 rounded-none">
-                    <Settings className="mr-2 h-5 w-5" />
-                    <span>Paramètres</span>
-                    <ChevronRight className="ml-auto h-5 w-5" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <Tabs defaultValue="overview" className="w-full mb-8">
+          <TabsList>
+            <TabsTrigger value="overview" onClick={() => setSelectedView('overview')}>Vue d'ensemble</TabsTrigger>
+            <TabsTrigger value="products" onClick={() => setSelectedView('products')}>Produits</TabsTrigger>
+            <TabsTrigger value="orders" onClick={() => setSelectedView('orders')}>Commandes</TabsTrigger>
+            <TabsTrigger value="customers" onClick={() => setSelectedView('customers')}>Clients</TabsTrigger>
+          </TabsList>
           
-          <div className="md:col-span-3">
+          <TabsContent value="overview" className="mt-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-500">Revenus Totaux</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-2xl font-bold">4,280€</div>
+                      <div className="text-xs text-green-500 flex items-center">
+                        <TrendingUp className="h-3 w-3 mr-1" /> +12.5% depuis le mois dernier
+                      </div>
+                    </div>
+                    <DollarSign className="h-6 w-6 text-cosmetic-darkpink" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-500">Visites</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-2xl font-bold">1,248</div>
+                      <div className="text-xs text-green-500 flex items-center">
+                        <TrendingUp className="h-3 w-3 mr-1" /> +18.2% depuis le mois dernier
+                      </div>
+                    </div>
+                    <Eye className="h-6 w-6 text-cosmetic-darkpink" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-500">Commandes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-2xl font-bold">24</div>
+                      <div className="text-xs text-green-500 flex items-center">
+                        <TrendingUp className="h-3 w-3 mr-1" /> +5.3% depuis le mois dernier
+                      </div>
+                    </div>
+                    <ShoppingCart className="h-6 w-6 text-cosmetic-darkpink" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-500">Taux de Conversion</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-2xl font-bold">3.4%</div>
+                      <div className="text-xs text-red-500 flex items-center">
+                        <TrendingUp className="h-3 w-3 mr-1" /> -0.5% depuis le mois dernier
+                      </div>
+                    </div>
+                    <PieChart className="h-6 w-6 text-cosmetic-darkpink" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Revenus générés</CardTitle>
+                  <CardDescription>Revenus quotidiens des 30 derniers jours</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <SalesChart />
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Taux de Conversion</CardTitle>
+                  <CardDescription>Taux de visite/achat des 30 derniers jours</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ConversionChart />
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Recent Orders */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle>Commandes Récentes</CardTitle>
+                  <Button variant="ghost" size="sm">Voir tout</Button>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {mockOrders.map((order) => (
+                        <TableRow key={order.id}>
+                          <TableCell>{order.id}</TableCell>
+                          <TableCell>{order.customer}</TableCell>
+                          <TableCell>{getOrderStatusBadge(order.status)}</TableCell>
+                          <TableCell className="text-right">{order.total.toFixed(2)}€</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle>Meilleures Ventes</CardTitle>
+                  <Button variant="ghost" size="sm">Voir tout</Button>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Produit</TableHead>
+                        <TableHead>Ventes</TableHead>
+                        <TableHead className="text-right">Revenus</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {mockBestSellers.map((product) => (
+                        <TableRow key={product.id}>
+                          <TableCell>{product.name}</TableCell>
+                          <TableCell>{product.sales}</TableCell>
+                          <TableCell className="text-right">{product.revenue}€</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="products" className="mt-6">
             <Card>
               <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2">
                 <CardTitle>Gestion des Produits</CardTitle>
@@ -205,8 +330,120 @@ const Admin: React.FC = () => {
                 )}
               </CardContent>
             </Card>
-          </div>
-        </div>
+          </TabsContent>
+          
+          <TabsContent value="orders" className="mt-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle>Gestion des Commandes</CardTitle>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="gap-2">
+                    <CheckCircle className="h-4 w-4" /> Complétées
+                  </Button>
+                  <Button variant="outline" className="gap-2">
+                    <CreditCard className="h-4 w-4" /> En cours
+                  </Button>
+                  <Button variant="outline" className="gap-2">
+                    <XCircle className="h-4 w-4" /> Remboursées
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {mockOrders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell>{order.id}</TableCell>
+                        <TableCell>{order.customer}</TableCell>
+                        <TableCell>{order.date}</TableCell>
+                        <TableCell>{getOrderStatusBadge(order.status)}</TableCell>
+                        <TableCell className="text-right">{order.total.toFixed(2)}€</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="customers" className="mt-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle>Gestion des Clients</CardTitle>
+                <Button className="h-10 bg-cosmetic-darkpink hover:bg-cosmetic-darkpink/90 text-white">
+                  <Plus className="h-4 w-4 mr-2" /> Ajouter un client
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Nom</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Commandes</TableHead>
+                      <TableHead>Total dépensé</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>1</TableCell>
+                      <TableCell>Sophie Martin</TableCell>
+                      <TableCell>sophie.martin@example.com</TableCell>
+                      <TableCell>3</TableCell>
+                      <TableCell>385.70€</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>2</TableCell>
+                      <TableCell>Lucas Dubois</TableCell>
+                      <TableCell>lucas.dubois@example.com</TableCell>
+                      <TableCell>2</TableCell>
+                      <TableCell>189.90€</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>3</TableCell>
+                      <TableCell>Emma Bernard</TableCell>
+                      <TableCell>emma.bernard@example.com</TableCell>
+                      <TableCell>1</TableCell>
+                      <TableCell>215.30€</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
