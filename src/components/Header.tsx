@@ -1,17 +1,33 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ShoppingBag, User, Search, Menu, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingBag, User, Search, Menu, X, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header: React.FC = () => {
+  const navigate = useNavigate();
   const { cartItems } = useCart();
+  const { user, isAuthenticated, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
   return (
@@ -46,9 +62,45 @@ const Header: React.FC = () => {
             <Button variant="ghost" size="icon" className="text-cosmetic-black hover:text-cosmetic-darkpink">
               <Search size={20} />
             </Button>
-            <Button variant="ghost" size="icon" className="text-cosmetic-black hover:text-cosmetic-darkpink">
-              <User size={20} />
-            </Button>
+            
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-cosmetic-black hover:text-cosmetic-darkpink">
+                    <User size={20} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>{user?.name}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/profile')}>
+                    Profil
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/orders')}>
+                    Mes commandes
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="cursor-pointer text-red-500" onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Déconnexion</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-cosmetic-black hover:text-cosmetic-darkpink"
+                onClick={() => navigate('/auth')}
+              >
+                <User size={20} />
+              </Button>
+            )}
+            
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon" className="text-cosmetic-black hover:text-cosmetic-darkpink">
                 <ShoppingBag size={20} />
@@ -102,6 +154,26 @@ const Header: React.FC = () => {
               >
                 Contact
               </Link>
+              {!isAuthenticated && (
+                <Link 
+                  to="/auth" 
+                  className="text-cosmetic-darkpink hover:text-cosmetic-darkpink font-medium transition-colors p-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Connexion / Inscription
+                </Link>
+              )}
+              {isAuthenticated && (
+                <button 
+                  className="text-red-500 hover:text-red-600 font-medium transition-colors p-2 text-left"
+                  onClick={() => {
+                    handleLogout();
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Déconnexion
+                </button>
+              )}
             </nav>
           </div>
         )}
