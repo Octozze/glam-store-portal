@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/context/CartContext';
+import { ShoppingBag, CreditCard } from 'lucide-react';
 
 interface CartSummaryProps {
   subtotal: number;
@@ -46,7 +47,8 @@ const CartSummary: React.FC<CartSummaryProps> = ({ subtotal, shipping, tax, tota
         disabled={cartItems.length === 0}
         asChild
       >
-        <Link to="/checkout">
+        <Link to="/checkout" className="flex items-center justify-center">
+          <CreditCard className="mr-2 h-4 w-4" />
           Passer à la caisse
         </Link>
       </Button>
@@ -54,6 +56,13 @@ const CartSummary: React.FC<CartSummaryProps> = ({ subtotal, shipping, tax, tota
       <p className="text-center text-xs text-gray-500 mt-4">
         Paiements sécurisés. Livraison gratuite à partir de 50€ d'achat.
       </p>
+      
+      <div className="mt-6 pt-4 border-t border-gray-200">
+        <Link to="/products" className="text-cosmetic-darkpink hover:underline inline-flex items-center text-sm">
+          <ShoppingBag className="mr-2 h-3 w-3" /> 
+          Continuer vos achats
+        </Link>
+      </div>
     </div>
   );
 };
