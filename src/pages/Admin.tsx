@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { 
   Package, Users, ShoppingCart, Tag, BarChart, Settings, 
   ChevronRight, Plus, Search, PieChart, DollarSign, TrendingUp,
-  Calendar, Eye, CreditCard, CheckCircle, XCircle, RotateCcw
+  Calendar, Eye, CreditCard, CheckCircle, XCircle, RotateCcw,
+  User, Phone, MapPin, Mail, Edit, Save, Trash2
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import SalesChart from '@/components/admin/SalesChart';
 import ConversionChart from '@/components/admin/ConversionChart';
+import ProfileManagement from '@/components/admin/ProfileManagement';
 
 const Admin: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -382,66 +383,7 @@ const Admin: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="customers" className="mt-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle>Gestion des Clients</CardTitle>
-                <Button className="h-10 bg-cosmetic-darkpink hover:bg-cosmetic-darkpink/90 text-white">
-                  <Plus className="h-4 w-4 mr-2" /> Ajouter un client
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Nom</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Commandes</TableHead>
-                      <TableHead>Total dépensé</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>1</TableCell>
-                      <TableCell>Sophie Martin</TableCell>
-                      <TableCell>sophie.martin@example.com</TableCell>
-                      <TableCell>3</TableCell>
-                      <TableCell>385.70€</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>2</TableCell>
-                      <TableCell>Lucas Dubois</TableCell>
-                      <TableCell>lucas.dubois@example.com</TableCell>
-                      <TableCell>2</TableCell>
-                      <TableCell>189.90€</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>3</TableCell>
-                      <TableCell>Emma Bernard</TableCell>
-                      <TableCell>emma.bernard@example.com</TableCell>
-                      <TableCell>1</TableCell>
-                      <TableCell>215.30€</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+            <ProfileManagement />
           </TabsContent>
         </Tabs>
       </div>
