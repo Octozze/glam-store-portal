@@ -8,7 +8,7 @@ import PaymentMethods from '@/components/checkout/PaymentMethods';
 import OrderSummary from '@/components/checkout/OrderSummary';
 import { useCart } from '@/context/CartContext';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, ChevronLeft } from 'lucide-react';
+import { AlertCircle, ChevronLeft, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
@@ -17,6 +17,7 @@ const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('shipping');
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [shippingInfo, setShippingInfo] = useState({
     fullName: '',
     email: '',
@@ -28,8 +29,15 @@ const Checkout: React.FC = () => {
     shippingMethod: 'standard' as 'standard' | 'express' | 'relais'
   });
   
-  // Mock function for completing order - in a real app this would communicate with a backend
+  // Function for completing order - in a real app this would communicate with a backend
   const completeOrder = () => {
+    // Generate a unique order number
+    const timestamp = new Date().getTime().toString().slice(-8);
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    const newOrderNumber = `CMD-${timestamp}-${random}`;
+    
+    setOrderNumber(newOrderNumber);
+    
     // Simulate API call delay
     setTimeout(() => {
       setOrderPlaced(true);
@@ -65,14 +73,17 @@ const Checkout: React.FC = () => {
         <div className="container mx-auto px-4 py-12 text-center">
           <div className="max-w-md mx-auto">
             <div className="bg-green-50 rounded-full w-20 h-20 mx-auto flex items-center justify-center mb-6">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+              <CheckCircle className="h-10 w-10 text-green-500" />
             </div>
             <h1 className="text-2xl font-serif font-bold text-gray-900 mb-3">Commande confirmée !</h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-2">
               Merci pour votre commande. Vous recevrez un e-mail de confirmation avec les détails de livraison.
             </p>
+            {orderNumber && (
+              <p className="text-cosmetic-darkpink font-medium mb-6">
+                N° de commande: {orderNumber}
+              </p>
+            )}
             <div className="space-y-4">
               <Button asChild className="w-full">
                 <Link to="/products">Continuer mes achats</Link>
@@ -143,6 +154,7 @@ const Checkout: React.FC = () => {
                 `${shippingInfo.address}, ${shippingInfo.city}, ${shippingInfo.postalCode}, ${shippingInfo.country}` : 
                 undefined
               }
+              orderNumber={orderNumber}
             />
           </div>
         </div>

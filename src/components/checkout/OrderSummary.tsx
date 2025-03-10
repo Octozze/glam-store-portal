@@ -7,9 +7,15 @@ interface OrderSummaryProps {
   cartItems: CartItem[];
   shippingMethod?: 'standard' | 'express' | 'relais';
   shippingAddress?: string;
+  orderNumber?: string;
 }
 
-const OrderSummary: React.FC<OrderSummaryProps> = ({ cartItems, shippingMethod, shippingAddress }) => {
+const OrderSummary: React.FC<OrderSummaryProps> = ({ 
+  cartItems, 
+  shippingMethod, 
+  shippingAddress,
+  orderNumber
+}) => {
   // Calculate totals
   const getSubtotal = () => {
     return cartItems.reduce((total, item) => {
@@ -46,6 +52,13 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cartItems, shippingMethod, 
   
   return (
     <div className="bg-white p-6 rounded-lg border border-gray-200 sticky top-8">
+      {orderNumber && (
+        <div className="mb-4 bg-green-50 p-3 rounded-lg text-green-800">
+          <p className="font-medium">Commande confirmée</p>
+          <p className="text-sm">N° {orderNumber}</p>
+        </div>
+      )}
+      
       <h2 className="font-serif text-xl font-bold mb-4">Résumé de la commande</h2>
       
       <div className="mb-4">

@@ -6,130 +6,216 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { CreditCard, Calendar, Lock, User, CheckCircle2 } from 'lucide-react';
+import { CreditCard, Calendar, Lock, User, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import StripeCardElement from './StripeCardElement';
+
+// Initialize Stripe (replace with your publishable key)
+const stripePromise = loadStripe('pk_test_51OxCPjJ0aVJxvZuQSN8I9YzUDWYNDc9Xa6YbQ8hRhqOJkxYSgzj0q58YcupwlvZFDC7u45HYTx3UlfMTtLzDhBYX00f6rHnwrE');
 
 interface PaymentMethodsProps {
   shippingInfo: any;
   onOrderComplete: () => void;
 }
 
+const PaymentForm: React.FC<{ 
+  paymentMethod: string;
+  onSubmit: (e: React.FormEvent) => void;
+  isProcessing: boolean;
+  paymentError: string | null;
+}> = ({ paymentMethod, onSubmit, isProcessing, paymentError }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+
+  return (
+    <form onSubmit={onSubmit}>
+      {paymentError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erreur de paiement</AlertTitle>
+          <AlertDescription>{paymentError}</AlertDescription>
+        </Alert>
+      )}
+      
+      <RadioGroup 
+        value={paymentMethod} 
+        defaultValue="card"
+        className="flex flex-col space-y-3 mb-6"
+      >
+        <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
+          <RadioGroupItem value="card" id="card" />
+          <Label htmlFor="card" className="flex-1 cursor-pointer">
+            <div className="font-medium">Carte bancaire</div>
+            <div className="text-sm text-muted-foreground">Visa, Mastercard, AMEX</div>
+          </Label>
+          <div className="flex items-center space-x-2">
+            <img src="https://raw.githubusercontent.com/danielmconrad/payment-icons/master/min/flat/visa.svg" alt="Visa" className="h-8" />
+            <img src="https://raw.githubusercontent.com/danielmconrad/payment-icons/master/min/flat/mastercard.svg" alt="Mastercard" className="h-8" />
+            <img src="https://raw.githubusercontent.com/danielmconrad/payment-icons/master/min/flat/amex.svg" alt="Amex" className="h-8" />
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
+          <RadioGroupItem value="paypal" id="paypal" />
+          <Label htmlFor="paypal" className="flex-1 cursor-pointer">
+            <div className="font-medium">PayPal</div>
+            <div className="text-sm text-muted-foreground">Paiement rapide et sécurisé</div>
+          </Label>
+          <img src="https://raw.githubusercontent.com/danielmconrad/payment-icons/master/min/flat/paypal.svg" alt="PayPal" className="h-8" />
+        </div>
+      </RadioGroup>
+      
+      {paymentMethod === 'card' && <StripeCardElement />}
+      
+      {paymentMethod === 'paypal' && (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="mb-4">Vous serez redirigé vers PayPal pour effectuer votre paiement en toute sécurité.</p>
+              <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.jpg" alt="PayPal payment options" className="mx-auto" />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      <div className="flex items-center space-x-2 mb-6">
+        <div className="border border-green-500 rounded-full p-0.5">
+          <CheckCircle2 className="h-4 w-4 text-green-500" />
+        </div>
+        <span className="text-sm text-gray-500">Paiement sécurisé avec cryptage SSL 256-bit</span>
+      </div>
+      
+      <Button
+        type="submit"
+        className="w-full bg-cosmetic-darkpink hover:bg-cosmetic-darkpink/90 text-white"
+        disabled={isProcessing || !stripe}
+      >
+        {isProcessing ? 'Traitement en cours...' : 'Confirmer la commande'}
+      </Button>
+    </form>
+  );
+};
+
 const PaymentMethods: React.FC<PaymentMethodsProps> = ({ shippingInfo, onOrderComplete }) => {
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [cardInfo, setCardInfo] = useState({
-    number: '',
-    name: '',
-    expiry: '',
-    cvc: ''
-  });
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const handleCardInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    
-    // Card number formatting (add spaces every 4 digits)
-    if (name === 'number') {
-      const formattedValue = value
-        .replace(/\s/g, '')
-        .replace(/(\d{4})/g, '$1 ')
-        .trim()
-        .substring(0, 19);
-      
-      setCardInfo({
-        ...cardInfo,
-        [name]: formattedValue
-      });
-      return;
-    }
-    
-    // Expiry date formatting (MM/YY)
-    if (name === 'expiry') {
-      const formattedValue = value
-        .replace(/\D/g, '')
-        .replace(/(\d{2})(\d)/, '$1/$2')
-        .substring(0, 5);
-      
-      setCardInfo({
-        ...cardInfo,
-        [name]: formattedValue
-      });
-      return;
-    }
-    
-    // CVC (3-4 digits only)
-    if (name === 'cvc') {
-      const formattedValue = value.replace(/\D/g, '').substring(0, 4);
-      
-      setCardInfo({
-        ...cardInfo,
-        [name]: formattedValue
-      });
-      return;
-    }
-    
-    setCardInfo({
-      ...cardInfo,
-      [name]: value
-    });
+  const handlePaymentMethodChange = (value: string) => {
+    setPaymentMethod(value);
+    setPaymentError(null); // Clear any previous errors
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const processCardPayment = async (stripe: any, elements: any) => {
+    if (!stripe || !elements) {
+      setPaymentError("Impossible de se connecter au service de paiement. Veuillez réessayer.");
+      return false;
+    }
+
+    const cardElement = elements.getElement(CardElement);
     
-    // Basic validation
-    if (paymentMethod === 'card') {
-      if (cardInfo.number.replace(/\s/g, '').length < 16) {
-        toast({
-          title: "Erreur de paiement",
-          description: "Numéro de carte incomplet",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      if (cardInfo.name.length < 3) {
-        toast({
-          title: "Erreur de paiement",
-          description: "Nom du titulaire requis",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      if (cardInfo.expiry.length < 5) {
-        toast({
-          title: "Erreur de paiement",
-          description: "Date d'expiration invalide",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      if (cardInfo.cvc.length < 3) {
-        toast({
-          title: "Erreur de paiement",
-          description: "Code de sécurité (CVC) invalide",
-          variant: "destructive"
-        });
-        return;
-      }
+    if (!cardElement) {
+      setPaymentError("Erreur lors de la récupération des informations de carte.");
+      return false;
+    }
+
+    // In a real application, you would create a payment intent on your server
+    // and pass the client secret to the frontend
+    
+    // Mock successful payment for this example
+    // In a real app, this would be:
+    // const { error, paymentMethod } = await stripe.createPaymentMethod({
+    //   type: 'card',
+    //   card: cardElement,
+    // });
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // 90% chance of success for testing purposes
+    const isSuccessful = Math.random() < 0.9;
+    
+    if (!isSuccessful) {
+      setPaymentError("Votre carte a été refusée. Veuillez vérifier vos informations ou essayer une autre méthode de paiement.");
+      return false;
     }
     
-    // Simulate payment processing
-    setIsProcessing(true);
+    return true;
+  };
+
+  const processPayPalPayment = async () => {
+    // Simulate PayPal payment process
+    // In a real app, you would redirect to PayPal or use their SDK
     
-    // In a real application, this would be an API call to a payment processor
-    setTimeout(() => {
-      setIsProcessing(false);
-      toast({
-        title: "Paiement accepté",
-        description: "Votre paiement a été traité avec succès.",
-      });
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // 90% chance of success for testing purposes
+    const isSuccessful = Math.random() < 0.9;
+    
+    if (!isSuccessful) {
+      setPaymentError("Erreur lors du traitement du paiement PayPal. Veuillez réessayer.");
+      return false;
+    }
+    
+    return true;
+  };
+
+  const generateOrderNumber = () => {
+    const timestamp = new Date().getTime().toString().slice(-8);
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    return `CMD-${timestamp}-${random}`;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsProcessing(true);
+    setPaymentError(null);
+    
+    try {
+      let paymentSuccessful = false;
       
-      // Complete the order
-      onOrderComplete();
-    }, 2000);
+      if (paymentMethod === 'card') {
+        const stripe = await stripePromise;
+        const elements = stripe?.elements();
+        
+        if (stripe && elements) {
+          paymentSuccessful = await processCardPayment(stripe, elements);
+        } else {
+          throw new Error("Service de paiement non disponible");
+        }
+      } else if (paymentMethod === 'paypal') {
+        paymentSuccessful = await processPayPalPayment();
+      }
+      
+      if (paymentSuccessful) {
+        const newOrderNumber = generateOrderNumber();
+        setOrderNumber(newOrderNumber);
+        
+        // In a real app, you would store the order in the database here
+        
+        toast({
+          title: "Paiement accepté",
+          description: `Commande #${newOrderNumber} confirmée. Un email de confirmation vous a été envoyé.`,
+        });
+        
+        // Complete the order flow
+        onOrderComplete();
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      setPaymentError(
+        error instanceof Error
+          ? error.message
+          : "Une erreur est survenue lors du traitement du paiement. Veuillez réessayer."
+      );
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -143,144 +229,14 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ shippingInfo, onOrderCo
         </TabsList>
         
         <TabsContent value="options">
-          <form onSubmit={handleSubmit}>
-            <RadioGroup 
-              value={paymentMethod} 
-              onValueChange={setPaymentMethod}
-              className="flex flex-col space-y-3 mb-6"
-            >
-              <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
-                <RadioGroupItem value="card" id="card" />
-                <Label htmlFor="card" className="flex-1 cursor-pointer">
-                  <div className="font-medium">Carte bancaire</div>
-                  <div className="text-sm text-muted-foreground">Visa, Mastercard, AMEX</div>
-                </Label>
-                <div className="flex items-center space-x-2">
-                  <img src="https://raw.githubusercontent.com/danielmconrad/payment-icons/master/min/flat/visa.svg" alt="Visa" className="h-8" />
-                  <img src="https://raw.githubusercontent.com/danielmconrad/payment-icons/master/min/flat/mastercard.svg" alt="Mastercard" className="h-8" />
-                  <img src="https://raw.githubusercontent.com/danielmconrad/payment-icons/master/min/flat/amex.svg" alt="Amex" className="h-8" />
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
-                <RadioGroupItem value="paypal" id="paypal" />
-                <Label htmlFor="paypal" className="flex-1 cursor-pointer">
-                  <div className="font-medium">PayPal</div>
-                  <div className="text-sm text-muted-foreground">Paiement rapide et sécurisé</div>
-                </Label>
-                <img src="https://raw.githubusercontent.com/danielmconrad/payment-icons/master/min/flat/paypal.svg" alt="PayPal" className="h-8" />
-              </div>
-              
-              <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
-                <RadioGroupItem value="applepay" id="applepay" />
-                <Label htmlFor="applepay" className="flex-1 cursor-pointer">
-                  <div className="font-medium">Apple Pay</div>
-                  <div className="text-sm text-muted-foreground">Paiement rapide avec votre appareil Apple</div>
-                </Label>
-                <img src="https://raw.githubusercontent.com/danielmconrad/payment-icons/master/min/flat/apple-pay.svg" alt="Apple Pay" className="h-8" />
-              </div>
-              
-              <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-gray-50">
-                <RadioGroupItem value="cod" id="cod" />
-                <Label htmlFor="cod" className="flex-1 cursor-pointer">
-                  <div className="font-medium">Paiement à la livraison</div>
-                  <div className="text-sm text-muted-foreground">Payez lors de la réception de votre colis</div>
-                </Label>
-                <div className="text-cosmetic-darkpink font-medium">+5,00€</div>
-              </div>
-            </RadioGroup>
-            
-            {paymentMethod === 'card' && (
-              <Card className="mb-6">
-                <CardContent className="pt-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="cardNumber">Numéro de carte</Label>
-                      <div className="relative mt-1">
-                        <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input 
-                          id="cardNumber"
-                          name="number"
-                          className="pl-10"
-                          placeholder="4242 4242 4242 4242"
-                          value={cardInfo.number}
-                          onChange={handleCardInfoChange}
-                          maxLength={19}
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="cardName">Nom du titulaire</Label>
-                      <div className="relative mt-1">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input 
-                          id="cardName"
-                          name="name"
-                          className="pl-10"
-                          placeholder="JOHN DOE"
-                          value={cardInfo.name}
-                          onChange={handleCardInfoChange}
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="expiry">Date d'expiration</Label>
-                        <div className="relative mt-1">
-                          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                          <Input 
-                            id="expiry"
-                            name="expiry"
-                            className="pl-10"
-                            placeholder="MM/YY"
-                            value={cardInfo.expiry}
-                            onChange={handleCardInfoChange}
-                            required
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="cvc">CVC</Label>
-                        <div className="relative mt-1">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                          <Input 
-                            id="cvc"
-                            name="cvc"
-                            className="pl-10"
-                            placeholder="123"
-                            value={cardInfo.cvc}
-                            onChange={handleCardInfoChange}
-                            required
-                            maxLength={4}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
-            <div className="flex items-center space-x-2 mb-6">
-              <div className="border border-green-500 rounded-full p-0.5">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-              </div>
-              <span className="text-sm text-gray-500">Paiement sécurisé avec cryptage SSL 256-bit</span>
-            </div>
-            
-            <Button
-              type="submit"
-              className="w-full bg-cosmetic-darkpink hover:bg-cosmetic-darkpink/90 text-white"
-              disabled={isProcessing}
-            >
-              {isProcessing ? 'Traitement en cours...' : 'Confirmer la commande'}
-            </Button>
-          </form>
+          <Elements stripe={stripePromise}>
+            <PaymentForm
+              paymentMethod={paymentMethod}
+              onSubmit={handleSubmit}
+              isProcessing={isProcessing}
+              paymentError={paymentError}
+            />
+          </Elements>
         </TabsContent>
         
         <TabsContent value="review">
@@ -310,13 +266,14 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({ shippingInfo, onOrderCo
               </div>
             </div>
             
-            <Button
-              onClick={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
-              className="w-full bg-cosmetic-darkpink hover:bg-cosmetic-darkpink/90 text-white"
-              disabled={isProcessing}
-            >
-              {isProcessing ? 'Traitement en cours...' : 'Confirmer la commande'}
-            </Button>
+            <Elements stripe={stripePromise}>
+              <PaymentForm
+                paymentMethod={paymentMethod}
+                onSubmit={handleSubmit}
+                isProcessing={isProcessing}
+                paymentError={paymentError}
+              />
+            </Elements>
           </div>
         </TabsContent>
       </Tabs>
