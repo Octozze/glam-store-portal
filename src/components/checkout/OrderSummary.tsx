@@ -58,9 +58,9 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cartItems, shippingMethod, 
             <div key={item.product.id} className="flex justify-between items-start py-2">
               <div className="flex items-start">
                 <div className="w-10 h-10 bg-gray-100 rounded flex-shrink-0 mr-3 overflow-hidden">
-                  {item.product.images && item.product.images.length > 0 && (
+                  {item.product.image && (
                     <img 
-                      src={item.product.images[0]} 
+                      src={item.product.image} 
                       alt={item.product.name} 
                       className="w-full h-full object-cover"
                     />
