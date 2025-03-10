@@ -80,9 +80,11 @@ const Header: React.FC = () => {
                   <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/profile')}>
                     Profil
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/orders')}>
-                    Mes commandes
-                  </DropdownMenuItem>
+                  {user?.isAdmin && (
+                    <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/admin')}>
+                      Administration
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="cursor-pointer text-red-500" onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
