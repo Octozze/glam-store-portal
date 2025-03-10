@@ -25,7 +25,7 @@ const Checkout: React.FC = () => {
     postalCode: '',
     country: 'France',
     phone: '',
-    shippingMethod: 'standard'
+    shippingMethod: 'standard' as 'standard' | 'express' | 'relais'
   });
   
   // Mock function for completing order - in a real app this would communicate with a backend

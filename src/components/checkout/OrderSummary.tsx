@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator';
 
 interface OrderSummaryProps {
   cartItems: CartItem[];
-  shippingMethod?: string;
+  shippingMethod?: 'standard' | 'express' | 'relais';
   shippingAddress?: string;
 }
 
