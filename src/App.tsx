@@ -22,6 +22,9 @@ import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Profile from "./pages/Profile";
+import Returns from "./pages/Returns";
+import Careers from "./pages/Careers";
+import ProductManagement from "./pages/ProductManagement";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +46,8 @@ const App = () => (
               <Route path="/shipping" element={<Shipping />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
+              <Route path="/returns" element={<Returns />} />
+              <Route path="/careers" element={<Careers />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/cart" element={
                 <ProtectedRoute>
@@ -57,6 +62,11 @@ const App = () => (
               <Route path="/admin" element={
                 <ProtectedRoute requireAdmin={true}>
                   <Admin />
+                </ProtectedRoute>
+              } />
+              <Route path="/product-management" element={
+                <ProtectedRoute requireAdmin={true}>
+                  <ProductManagement />
                 </ProtectedRoute>
               } />
               <Route path="/profile" element={
